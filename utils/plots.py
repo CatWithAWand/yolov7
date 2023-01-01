@@ -146,7 +146,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
 
         img = img.transpose(1, 2, 0)
         if scale_factor < 1:
-            img = cv2.resize(img, (w, h))
+            img = cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC)
 
         mosaic[block_y:block_y + h, block_x:block_x + w, :] = img
         if len(targets) > 0:
@@ -184,7 +184,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
 
     if fname:
         r = min(1280. / max(h, w) / ns, 1.0)  # ratio to limit image size
-        mosaic = cv2.resize(mosaic, (int(ns * w * r), int(ns * h * r)), interpolation=cv2.INTER_AREA)
+        mosaic = cv2.resize(mosaic, (int(ns * w * r), int(ns * h * r)), interpolation=cv2.INTER_CUBIC)
         # cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))  # cv2 save
         Image.fromarray(mosaic).save(fname)  # PIL save
     return mosaic

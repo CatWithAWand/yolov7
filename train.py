@@ -354,7 +354,7 @@ def train(hyp, opt, device, tb_writer=None):
                 sf = sz / max(imgs.shape[2:])  # scale factor
                 if sf != 1:
                     ns = [math.ceil(x * sf / gs) * gs for x in imgs.shape[2:]]  # new shape (stretched to gs-multiple)
-                    imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
+                    imgs = F.interpolate(imgs, size=ns, mode='bicubic', align_corners=False)
 
             # Forward
             with amp.autocast(enabled=cuda):

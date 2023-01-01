@@ -647,7 +647,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         for i in range(n):  # zidane torch.zeros(16,3,720,1280)  # BCHW
             i *= 4
             if random.random() < 0.5:
-                im = F.interpolate(img[i].unsqueeze(0).float(), scale_factor=2., mode='bilinear', align_corners=False)[
+                im = F.interpolate(img[i].unsqueeze(0).float(), scale_factor=2., mode='bicubic', align_corners=False)[
                     0].type(img[i].type())
                 l = label[i]
             else:
@@ -673,7 +673,7 @@ def load_image(self, index):
         h0, w0 = img.shape[:2]  # orig hw
         r = self.img_size / max(h0, w0)  # resize image to img_size
         if r != 1:  # always resize down, only resize up if training with augmentation
-            interp = cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR
+            interp = cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_CUBIC
             img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=interp)
         return img, (h0, w0), img.shape[:2]  # img, hw_original, hw_resized
     else:
@@ -1007,7 +1007,7 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
     dh /= 2
 
     if shape[::-1] != new_unpad:  # resize
-        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_CUBIC)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
@@ -1196,8 +1196,8 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
             r_h = int(hs*r_scale)
             
             if (r_w > 10) and (r_h > 10):
-                r_mask = cv2.resize(sample_masks[sel_ind], (r_w, r_h))
-                r_image = cv2.resize(sample_images[sel_ind], (r_w, r_h))
+                r_mask = cv2.resize(sample_masks[sel_ind], (r_w, r_h), interpolation=cv2.INTER_CUBIC)
+                r_image = cv2.resize(sample_images[sel_ind], (r_w, r_h), interpolation=cv2.INTER_CUBIC)
                 temp_crop = image[ymin:ymin+r_h, xmin:xmin+r_w]
                 m_ind = r_mask > 0
                 if m_ind.astype(np.int32).sum() > 60:

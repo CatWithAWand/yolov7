@@ -14,11 +14,11 @@ def preprocess(img, input_shape, letter_box=True):
         else:
             new_w = int(img_w * new_h / img_h)
             offset_w = (input_shape[1] - new_w) // 2
-        resized = cv2.resize(img, (new_w, new_h))
+        resized = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
         img = np.full((input_shape[0], input_shape[1], 3), 127, dtype=np.uint8)
         img[offset_h:(offset_h + new_h), offset_w:(offset_w + new_w), :] = resized
     else:
-        img = cv2.resize(img, (input_shape[1], input_shape[0]))
+        img = cv2.resize(img, (input_shape[1], input_shape[0]), interpolation=cv2.INTER_CUBIC)
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = img.transpose((2, 0, 1)).astype(np.float32)
