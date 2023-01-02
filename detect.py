@@ -114,7 +114,13 @@ def detect(save_img=False):
                 # Print results
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
-                    s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                    class_det_str = ""
+                    if (opt.detailed_log):
+                        class_det = det[det[:, -1] == c]
+                        strs = [f"(x: {x1}, y: {y1}, width: {x2 - x1}, height: {y2 - y1}, conf: {conf:.2f}, cls: {cls})" for x1,
+                                y1, x2, y2, conf, cls in class_det]
+                        class_det_str = f"[{', '.join(strs)}]"
+                    s += f"{n} {names[int(c)]}{'s' * (n > 1)} {class_det_str}, "
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
@@ -183,6 +189,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--no-trace', action='store_true', help='don`t trace model')
+    parser.add_argument('--detailed-log', action='store_true', help='print coords, size, condifence, and class of inference')
     opt = parser.parse_args()
     print(opt)
     #check_requirements(exclude=('pycocotools', 'thop'))
