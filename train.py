@@ -49,6 +49,7 @@ def train(hyp, opt, device, tb_writer=None):
     last = wdir / 'last.pt'
     best = wdir / 'best.pt'
     results_file = save_dir / 'results.txt'
+    dataset_dir = os.path.dirname(opt.data)
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
@@ -94,9 +95,9 @@ def train(hyp, opt, device, tb_writer=None):
     else:
         model = Model(opt.cfg, ch=3, nc=nc, anchors=hyp.get('anchors')).to(device)  # create
     with torch_distributed_zero_first(rank):
-        check_dataset(data_dict)  # check
-    train_path = data_dict['train']
-    test_path = data_dict['val']
+        check_dataset(data_dict, dataset_dir)  # check
+    train_path = data_dict['train'] if os.path.exists(data_dict['train']) else dataset_dir + data_dict['train'].replace('..', '')
+    test_path = data_dict['val'] if os.path.exists(data_dict['val']) else dataset_dir + data_dict['val'].replace('..', '')
 
     # Freeze
     freeze = [f'model.{x}.' for x in (freeze if len(freeze) > 1 else range(freeze[0]))]  # parameter names to freeze (full or partial)
@@ -412,7 +413,7 @@ def train(hyp, opt, device, tb_writer=None):
             final_epoch = epoch + 1 == epochs
             if not opt.notest or final_epoch:  # Calculate mAP
                 wandb_logger.current_epoch = epoch + 1
-                results, maps, times = test.test(data_dict,
+                results, maps, times = test.test(opt.data,
                                                  batch_size=batch_size * 2,
                                                  imgsz=imgsz_test,
                                                  model=ema.ema,

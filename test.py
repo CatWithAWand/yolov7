@@ -69,12 +69,11 @@ def test(data,
 
     # Configure
     model.eval()
-    if isinstance(data, str):
-        is_coco = data.endswith('coco.yaml')
-        with open(data) as f:
-            data = yaml.load(f, Loader=yaml.SafeLoader)
-    check_dataset(data)  # check
-    nc = 1 if single_cls else int(data['nc'])  # number of classes
+    with open(data) as f:
+        data_dict = yaml.load(f, Loader=yaml.SafeLoader)  # data dict
+    is_coco = data.endswith('coco.yaml')
+    check_dataset(data_dict, os.path.dirname(data))  # check
+    nc = 1 if single_cls else int(data_dict['nc'])  # number of classes
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
 
@@ -87,7 +86,7 @@ def test(data,
         if device.type != 'cpu':
             model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
         task = opt.task if opt.task in ('train', 'val', 'test') else 'val'  # path to train/val/test images
-        dataloader = create_dataloader(data[task], imgsz, batch_size, gs, opt, pad=0.5, rect=True,
+        dataloader = create_dataloader(data_dict[task], imgsz, batch_size, gs, opt, pad=0.5, rect=True,
                                        prefix=colorstr(f'{task}: '))[0]
 
     if v5_metric:

@@ -1,4 +1,4 @@
-# YOLOR general utils
+# YOLOv7 general utils
 
 import glob
 import logging
@@ -110,7 +110,7 @@ def check_requirements(requirements='requirements.txt', exclude=()):
             pkg.require(r)
         except Exception as e:  # DistributionNotFound or VersionConflict if requirements not met
             n += 1
-            print(f"{prefix} {e.req} not found and is required by YOLOR, attempting auto-update...")
+            print(f"{prefix} {e.req} not found and is required by YOLOv7, attempting auto-update...")
             print(subprocess.check_output(f"pip install '{e.req}'", shell=True).decode())
 
     if n:  # if packages updated
@@ -152,10 +152,10 @@ def check_file(file):
         assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"  # assert unique
         return files[0]  # return file
 
-
-def check_dataset(dict):
+def check_dataset(dict, dataset_dir):
     # Download dataset if not found locally
-    val, s = dict.get('val'), dict.get('download')
+    val_path = dict['val'] if os.path.exists(dict['val']) else dataset_dir + dict['val'].replace('..', '')
+    val, s = val_path, dict.get('download')
     if val and len(val):
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):

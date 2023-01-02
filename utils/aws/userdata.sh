@@ -5,7 +5,7 @@
 # Use >300 GB SSD
 
 cd home/ubuntu
-if [ ! -d yolor ]; then
+if [ ! -d yolov7 ]; then
   echo "Running first-time script." # install dependencies, download COCO, pull Docker
   git clone -b main https://github.com/WongKinYiu/yolov7 && sudo chmod -R 777 yolov7
   cd yolov7
