@@ -244,7 +244,7 @@ if __name__ == '__main__':
                         help='Print GPU usage')
     parser.add_argument('--gpu-usage-summary', action='store_true',
                         help='Print GPU usage summary')
-    parser.add_argument('--monitor', action='store_true',
+    parser.add_argument('--monitor', type=int, default=0,
                         help='Monitor system info')
     opt = parser.parse_args()
 
@@ -252,7 +252,7 @@ if __name__ == '__main__':
         opt.sys_summary = True
         
     if opt.monitor:
-        SystemMonitor(opt).start()
+        SystemMonitor(opt, opt.monitor).start()
     else:
         args_map = {
             'sys_summary': sysinfo.sys_summary,
