@@ -18,7 +18,7 @@ def gsutil_getsize(url=''):
 
 def attempt_download(file, repo='WongKinYiu/yolov7'):
     # Attempt file download if does not exist
-    file = Path(str(file).strip().replace("'", '').lower())
+    file = Path(str(file).strip().replace("'", ''))
 
     if not file.exists():
         try:
@@ -30,7 +30,7 @@ def attempt_download(file, repo='WongKinYiu/yolov7'):
                       'yolov7-e6e.pt', 'yolov7-w6.pt']
             tag = subprocess.check_output('git tag', shell=True).decode().split()[-1]
 
-        name = file.name
+        name = file.name.lower()
         if name in assets:
             msg = f'{file} missing, try downloading from https://github.com/{repo}/releases/'
             redundant = False  # second download option
