@@ -162,8 +162,10 @@ if __name__ == '__main__':
         print("Creating emtpy buffer filled with ones...")
         inputs = []
         outputs = []
-        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [1, 3, FLAGS.width, FLAGS.height], "FP32"))
-        inputs[0].set_data_from_numpy(np.ones(shape=(1, 3, FLAGS.width, FLAGS.height), dtype=np.float32))
+        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [
+                      1, 3, FLAGS.width, FLAGS.height], "FP32"))
+        inputs[0].set_data_from_numpy(
+            np.ones(shape=(1, 3, FLAGS.width, FLAGS.height), dtype=np.float32))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[0]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[1]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[2]))
@@ -175,7 +177,8 @@ if __name__ == '__main__':
                                       outputs=outputs,
                                       client_timeout=FLAGS.client_timeout)
         if FLAGS.model_info:
-            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            statistics = triton_client.get_inference_statistics(
+                model_name=FLAGS.model)
             if len(statistics.model_stats) != 1:
                 print("FAILED: get_inference_statistics")
                 sys.exit(1)
@@ -184,7 +187,8 @@ if __name__ == '__main__':
 
         for output in OUTPUT_NAMES:
             result = results.as_numpy(output)
-            print(f"Received result buffer \"{output}\" of size {result.shape}")
+            print(
+                f"Received result buffer \"{output}\" of size {result.shape}")
             print(f"Naive buffer sum: {np.sum(result)}")
 
     # IMAGE MODE
@@ -196,7 +200,8 @@ if __name__ == '__main__':
 
         inputs = []
         outputs = []
-        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [1, 3, FLAGS.width, FLAGS.height], "FP32"))
+        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [
+                      1, 3, FLAGS.width, FLAGS.height], "FP32"))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[0]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[1]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[2]))
@@ -207,7 +212,8 @@ if __name__ == '__main__':
         if input_image is None:
             print(f"FAILED: could not load input image {str(FLAGS.input)}")
             sys.exit(1)
-        input_image_buffer = preprocess(input_image, [FLAGS.width, FLAGS.height])
+        input_image_buffer = preprocess(
+            input_image, [FLAGS.width, FLAGS.height])
         input_image_buffer = np.expand_dims(input_image_buffer, axis=0)
 
         inputs[0].set_data_from_numpy(input_image_buffer)
@@ -218,7 +224,8 @@ if __name__ == '__main__':
                                       outputs=outputs,
                                       client_timeout=FLAGS.client_timeout)
         if FLAGS.model_info:
-            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            statistics = triton_client.get_inference_statistics(
+                model_name=FLAGS.model)
             if len(statistics.model_stats) != 1:
                 print("FAILED: get_inference_statistics")
                 sys.exit(1)
@@ -227,22 +234,28 @@ if __name__ == '__main__':
 
         for output in OUTPUT_NAMES:
             result = results.as_numpy(output)
-            print(f"Received result buffer \"{output}\" of size {result.shape}")
+            print(
+                f"Received result buffer \"{output}\" of size {result.shape}")
             print(f"Naive buffer sum: {np.sum(result)}")
 
         num_dets = results.as_numpy(OUTPUT_NAMES[0])
         det_boxes = results.as_numpy(OUTPUT_NAMES[1])
         det_scores = results.as_numpy(OUTPUT_NAMES[2])
         det_classes = results.as_numpy(OUTPUT_NAMES[3])
-        detected_objects = postprocess(num_dets, det_boxes, det_scores, det_classes, input_image.shape[1], input_image.shape[0], [FLAGS.width, FLAGS.height])
+        detected_objects = postprocess(num_dets, det_boxes, det_scores, det_classes,
+                                       input_image.shape[1], input_image.shape[0], [FLAGS.width, FLAGS.height])
         print(f"Detected objects: {len(detected_objects)}")
 
         for box in detected_objects:
             print(f"{COCOLabels(box.classID).name}: {box.confidence}")
-            input_image = render_box(input_image, box.box(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
-            size = get_text_size(input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
-            input_image = render_filled_box(input_image, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
-            input_image = render_text(input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)
+            input_image = render_box(input_image, box.box(), color=tuple(
+                RAND_COLORS[box.classID % 64].tolist()))
+            size = get_text_size(
+                input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
+            input_image = render_filled_box(
+                input_image, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
+            input_image = render_text(input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (
+                box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)
 
         if FLAGS.out:
             cv2.imwrite(FLAGS.out, input_image)
@@ -261,7 +274,8 @@ if __name__ == '__main__':
 
         inputs = []
         outputs = []
-        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [1, 3, FLAGS.width, FLAGS.height], "FP32"))
+        inputs.append(grpcclient.InferInput(INPUT_NAMES[0], [
+                      1, 3, FLAGS.width, FLAGS.height], "FP32"))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[0]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[1]))
         outputs.append(grpcclient.InferRequestedOutput(OUTPUT_NAMES[2]))
@@ -285,7 +299,8 @@ if __name__ == '__main__':
             if counter == 0 and FLAGS.out:
                 print("Opening output video stream...")
                 fourcc = cv2.VideoWriter_fourcc('M', 'P', '4', 'V')
-                out = cv2.VideoWriter(FLAGS.out, fourcc, FLAGS.fps, (frame.shape[1], frame.shape[0]))
+                out = cv2.VideoWriter(
+                    FLAGS.out, fourcc, FLAGS.fps, (frame.shape[1], frame.shape[0]))
 
             input_image_buffer = preprocess(frame, [FLAGS.width, FLAGS.height])
             input_image_buffer = np.expand_dims(input_image_buffer, axis=0)
@@ -301,16 +316,21 @@ if __name__ == '__main__':
             det_boxes = results.as_numpy("det_boxes")
             det_scores = results.as_numpy("det_scores")
             det_classes = results.as_numpy("det_classes")
-            detected_objects = postprocess(num_dets, det_boxes, det_scores, det_classes, frame.shape[1], frame.shape[0], [FLAGS.width, FLAGS.height])
+            detected_objects = postprocess(
+                num_dets, det_boxes, det_scores, det_classes, frame.shape[1], frame.shape[0], [FLAGS.width, FLAGS.height])
             print(f"Frame {counter}: {len(detected_objects)} objects")
             counter += 1
 
             for box in detected_objects:
                 print(f"{COCOLabels(box.classID).name}: {box.confidence}")
-                frame = render_box(frame, box.box(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
-                size = get_text_size(frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
-                frame = render_filled_box(frame, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
-                frame = render_text(frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)
+                frame = render_box(frame, box.box(), color=tuple(
+                    RAND_COLORS[box.classID % 64].tolist()))
+                size = get_text_size(
+                    frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
+                frame = render_filled_box(
+                    frame, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
+                frame = render_text(frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (
+                    box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)
 
             if FLAGS.out:
                 out.write(frame)
@@ -320,7 +340,8 @@ if __name__ == '__main__':
                     break
 
         if FLAGS.model_info:
-            statistics = triton_client.get_inference_statistics(model_name=FLAGS.model)
+            statistics = triton_client.get_inference_statistics(
+                model_name=FLAGS.model)
             if len(statistics.model_stats) != 1:
                 print("FAILED: get_inference_statistics")
                 sys.exit(1)

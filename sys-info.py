@@ -11,6 +11,7 @@ from tabulate import tabulate
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 
+
 class CpuInfo:
     def __init__(self):
         self.cpus_physical = psutil.cpu_count(logical=False)
@@ -26,7 +27,8 @@ class CpuInfo:
         return psutil.cpu_percent(percpu=True)
 
     def ram_used(self):
-        return round(self.ram_total - psutil.virtual_memory().available / 1024**3, 2)
+        return round(
+            self.ram_total - psutil.virtual_memory().available / 1024**3, 2)
 
     def ram_free(self):
         return round(psutil.virtual_memory().available / 1024**3, 2)
@@ -52,7 +54,7 @@ class Gpu:
             self.mem_total = round(
                 torch.cuda.mem_get_info(self.id)[1] / 1024**3, 2)
             self.driver_version = 'N/A'
-            
+
     def _update_nvidia_smi(self):
         if time.time() - self._last_update > self.nvidia_smi_timeout:
             self._nvidia_smi = GPUtil.getGPUs()[self.id]
@@ -64,7 +66,7 @@ class Gpu:
 
     def mem_used(self):
         self._update_nvidia_smi()
-        
+
         if self._nvidia_smi:
             return round(self._nvidia_smi.memoryUsed / 1024, 2)
         else:
@@ -73,11 +75,16 @@ class Gpu:
 
     def mem_free(self):
         self._update_nvidia_smi()
-        return round(self._nvidia_smi.memoryFree / 1024 if self._nvidia_smi else torch.cuda.mem_get_info(self.id)[0] / 1024**3, 2)
+        return round(
+            self._nvidia_smi.memoryFree /
+            1024 if self._nvidia_smi else torch.cuda.mem_get_info(self.id)[0] /
+            1024**3, 2)
 
     def mem_utilization(self):
         self._update_nvidia_smi()
-        return round(self._nvidia_smi.memoryUtil * 100 if self._nvidia_smi else (self.mem_used() / self.mem_total) * 100, 2)
+        return round(
+            self._nvidia_smi.memoryUtil * 100 if self._nvidia_smi else
+            (self.mem_used() / self.mem_total) * 100, 2)
 
 
 class GpuInfo:
@@ -87,9 +94,13 @@ class GpuInfo:
 
         nvidia_smi_gpus = GPUtil.getGPUs()
         if len(nvidia_smi_gpus) > 0:
-            self.gpus = [Gpu(gpu.id, nvidia_smi_timeout) for gpu in nvidia_smi_gpus]
+            self.gpus = [
+                Gpu(gpu.id, nvidia_smi_timeout) for gpu in nvidia_smi_gpus
+            ]
         else:
-            self.gpus = [Gpu(i, nvidia_smi_timeout) for i in range(self.cuda_devices)]
+            self.gpus = [
+                Gpu(i, nvidia_smi_timeout) for i in range(self.cuda_devices)
+            ]
 
         self.cuda_cores_total = sum([gpu.cuda_cores for gpu in self.gpus])
         self.mem_total = sum([gpu.mem_total for gpu in self.gpus])
@@ -127,12 +138,25 @@ class SysInfo:
         self._cpu_info = CpuInfo()
         self._gpu_info = GpuInfo(nvidia_smi_timeout)
         self._header_map = {
-            'cpu_info': ['Physical CPUs', 'Logical CPUs', 'CPU Architecture', 'CPU Bits', 'RAM Total (GB)'],
-            'gpu_info': ['ID', 'Name', 'CUDA Cores', 'Memory Total (GB)', 'Driver Version'],
+            'cpu_info': [
+                'Physical CPUs', 'Logical CPUs', 'CPU Architecture', 'CPU Bits',
+                'RAM Total (GB)'
+            ],
+            'gpu_info':
+            ['ID', 'Name', 'CUDA Cores', 'Memory Total (GB)', 'Driver Version'],
             'gpu_summary': ['CUDA Devices', 'CUDA Cores', 'Memory Total (GB)'],
-            'cpu_usage': ['Load (%)', 'RAM Utilization (%)', 'RAM Used (GB)', 'RAM Free (GB)'],
-            'gpu_usage': ['ID', 'Name', 'Load (%)', 'Memory Utilization (%)', 'Memory Used (GB)', 'Memory Free (GB)'],
-            'gpu_usage_summary': ['Load (%)', 'Memory Utilization (%)', 'Memory Used (GB)', 'Memory Free (GB)'],
+            'cpu_usage': [
+                'Load (%)', 'RAM Utilization (%)', 'RAM Used (GB)',
+                'RAM Free (GB)'
+            ],
+            'gpu_usage': [
+                'ID', 'Name', 'Load (%)', 'Memory Utilization (%)',
+                'Memory Used (GB)', 'Memory Free (GB)'
+            ],
+            'gpu_usage_summary': [
+                'Load (%)', 'Memory Utilization (%)', 'Memory Used (GB)',
+                'Memory Free (GB)'
+            ],
         }
 
     def sys_summary(self, header=False):
@@ -152,105 +176,146 @@ class SysInfo:
         return data
 
     def cpu_info(self, header=False):
-        data = [self._cpu_info.cpus_physical, self._cpu_info.cpus_logical,
-                self._cpu_info.cpu_architecture, self._cpu_info.cpu_bits, self._cpu_info.ram_total]
+        data = [
+            self._cpu_info.cpus_physical, self._cpu_info.cpus_logical,
+            self._cpu_info.cpu_architecture, self._cpu_info.cpu_bits,
+            self._cpu_info.ram_total
+        ]
 
         if header:
             return [self._header_map['cpu_info'], data]
         return [data]
 
     def gpu_info(self, header=False):
-        data = [[gpu.id, gpu.name, gpu.cuda_cores, gpu.mem_total,
-                 gpu.driver_version] for gpu in self._gpu_info.gpus]
+        data = [[
+            gpu.id, gpu.name, gpu.cuda_cores, gpu.mem_total, gpu.driver_version
+        ] for gpu in self._gpu_info.gpus]
 
         if header:
             return [self._header_map['gpu_info']] + data
         return [data]
 
     def gpu_info_summary(self, header=False):
-        data = [self._gpu_info.cuda_devices,
-                self._gpu_info.cuda_cores_total, self._gpu_info.mem_total]
+        data = [
+            self._gpu_info.cuda_devices, self._gpu_info.cuda_cores_total,
+            self._gpu_info.mem_total
+        ]
 
         if header:
             return [self._header_map['gpu_summary'], data]
         return [data]
 
     def cpu_usage(self, header=False):
-        data = [self._cpu_info.load(), self._cpu_info.ram_utilization(),
-                self._cpu_info.ram_used(), self._cpu_info.ram_free()]
+        data = [
+            self._cpu_info.load(),
+            self._cpu_info.ram_utilization(),
+            self._cpu_info.ram_used(),
+            self._cpu_info.ram_free()
+        ]
 
         if header:
             return [self._header_map['cpu_usage'], data]
         return [data]
 
     def gpu_usage(self, header=False):
-        data = [[gpu.id, gpu.name, gpu.load(), gpu.mem_utilization(
-        ), gpu.mem_used(), gpu.mem_free()] for gpu in self._gpu_info.gpus]
+        data = [[
+            gpu.id, gpu.name,
+            gpu.load(),
+            gpu.mem_utilization(),
+            gpu.mem_used(),
+            gpu.mem_free()
+        ] for gpu in self._gpu_info.gpus]
 
         if header:
             return [self._header_map['gpu_usage']] + data
         return [data]
 
     def gpu_usage_summary(self, header=False):
-        data = [self._gpu_info.load(), self._gpu_info.mem_utilization(),
-                self._gpu_info.mem_used(), self._gpu_info.mem_free()]
+        data = [
+            self._gpu_info.load(),
+            self._gpu_info.mem_utilization(),
+            self._gpu_info.mem_used(),
+            self._gpu_info.mem_free()
+        ]
 
         if header:
             return [self._header_map['gpu_usage_summary'], data]
         return [data]
-    
+
+
 class SystemMonitor():
     def __init__(self, opt, interval=5):
         self.opt = opt
         self.interval = interval
         self.sys_info = SysInfo(nvidia_smi_timeout=interval)
-        
+
     def _monitor(self):
         while True:
             # print datetime
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             if self.opt.sys_summary:
-                print(tabulate(self.sys_info.sys_summary(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.sys_summary(header=True),
+                             tablefmt='grid'))
             if self.opt.cpu_info:
-                print(tabulate(self.sys_info.cpu_info(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.cpu_info(header=True),
+                             tablefmt='grid'))
             if self.opt.gpu_info:
-                print(tabulate(self.sys_info.gpu_info(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.gpu_info(header=True),
+                             tablefmt='grid'))
             if self.opt.gpu_usage_summary:
-                print(tabulate(self.sys_info.gpu_usage_summary(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.gpu_usage_summary(header=True),
+                             tablefmt='grid'))
             if self.opt.cpu_usage:
-                print(tabulate(self.sys_info.cpu_usage(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.cpu_usage(header=True),
+                             tablefmt='grid'))
             if self.opt.gpu_usage:
-                print(tabulate(self.sys_info.gpu_usage(header=True), tablefmt='grid'))
+                print(
+                    tabulate(self.sys_info.gpu_usage(header=True),
+                             tablefmt='grid'))
             print()
             time.sleep(self.interval)
-            
+
     def start(self):
         self.thread = threading.Thread(target=self._monitor)
         self.thread.start()
-            
+
+
 if __name__ == '__main__':
     sysinfo = SysInfo()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sys-summary', action='store_true',
+    parser.add_argument('--sys-summary',
+                        action='store_true',
                         help='Print system summary')
-    parser.add_argument('--cpu-info', action='store_true',
+    parser.add_argument('--cpu-info',
+                        action='store_true',
                         help='Print CPU info')
-    parser.add_argument('--cpu-usage', action='store_true',
+    parser.add_argument('--cpu-usage',
+                        action='store_true',
                         help='Print CPU usage')
-    parser.add_argument('--gpu-info', action='store_true',
+    parser.add_argument('--gpu-info',
+                        action='store_true',
                         help='Print GPU info')
-    parser.add_argument('--gpu-usage', action='store_true',
+    parser.add_argument('--gpu-usage',
+                        action='store_true',
                         help='Print GPU usage')
-    parser.add_argument('--gpu-usage-summary', action='store_true',
+    parser.add_argument('--gpu-usage-summary',
+                        action='store_true',
                         help='Print GPU usage summary')
-    parser.add_argument('--monitor', type=int, default=0,
+    parser.add_argument('--monitor',
+                        type=int,
+                        default=0,
                         help='Monitor system info')
     opt = parser.parse_args()
 
     if not any(vars(opt).values()):
         opt.sys_summary = True
-        
+
     if opt.monitor:
         SystemMonitor(opt, opt.monitor).start()
     else:
@@ -266,5 +331,10 @@ if __name__ == '__main__':
         for key, value in args_map.items():
             if getattr(opt, key):
                 data = value(header=True)
-                print(tabulate(data, headers='firstrow' if key != 'sys_summary' else '', tablefmt='grid',
-                    numalign='center', stralign='center' if key != 'sys_summary' else 'left'))
+                print(
+                    tabulate(
+                        data,
+                        headers='firstrow' if key != 'sys_summary' else '',
+                        tablefmt='grid',
+                        numalign='center',
+                        stralign='center' if key != 'sys_summary' else 'left'))
